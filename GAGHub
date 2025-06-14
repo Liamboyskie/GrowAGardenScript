@@ -1,100 +1,75 @@
-local http = require("socket.http") -- Requires LuaSocket for HTTP requests
-local json = require("dkjson") -- Requires dkjson for JSON encoding
-local string = string
-local table = table
-local math = math
-
--- Mock encoded strings (simplified subset of original C table)
-local C = {
-    "051075119102054075084051121075101081119114110100", -- Decodes to a mock webhook identifier
-    "115085077080121116119122073099081050121100061061", -- Decodes to a message template
-    "072085077050072057071074121112049061" -- Decodes to a trigger command
-}
-
--- Simplified mapping table (subset of original p table)
-local p = {
-    ["0"] = 0, ["1"] = 1, ["2"] = 2, ["3"] = 3, ["4"] = 4, ["5"] = 5,
-    ["6"] = 6, ["7"] = 7, ["8"] = 8, ["9"] = 9, ["/"] = 10, ["I"] = 28,
-    ["k"] = 51, ["O"] = 10, ["N"] = 60, ["Y"] = 30, ["r"] = 55, ["e"] = 1,
-    ["c"] = 38, ["E"] = 40, ["C"] = 45, ["F"] = 26, ["x"] = 63, ["H"] = 29
-}
-
--- Decode function (simplified version of original decoding logic)
-local function decode_string(str)
-    local result = ""
-    local num = 0
-    local shift = 0
-    for i = 1, #str do
-        local char = str:sub(i, i)
-        if p[char] then
-            num = num + p[char] * (2 ^ (3 - shift))
-            shift = shift + 1
-            if shift == 4 then
-                result = result .. string.char(math.floor(num / 64), math.floor((num % 64) / 8), num % 8)
-                num = 0
-                shift = 0
-            end
-        elseif char == "1" then
-            result = result .. string.char(math.floor(num / 64))
-            break
+local converted_code = [[
+return (function(...)
+    local C = {
+        "\051\075\119\102\054\075\084\051\121\075\101\081\119\114\110\100",
+        "\115\085\077\080\121\116\119\122\073\099\081\050\121\100\061\061",
+        -- ... (keep all original strings)
+        "\084\084\083\051"
+    }
+    local function P(P) return C[P + 63643] end
+    for P, V in ipairs({
+        {1, 53}, {-1, -42}, {43, -53}
+    }) do
+        while V[1] < V[2] do
+            C[V[1]], C[V[2]], V[1], V[2] = C[V[2]], C[V[1]], V[1] + 1, V[2] - 1
         end
     end
-    return result
-end
-
--- Discord webhook URL (replace with your actual webhook URL)
-local webhook_url = "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
-
--- Send notification to Discord
-local function send_discord_notification(message)
-    local payload = {
-        content = "<@YOUR_DISCORD_USER_ID>", -- Replace with your Discord user ID for direct mention
-        username = "NotificationBot",
-        embeds = {
-            {
-                title = "New Event Notification",
-                description = message,
-                color = 0x00FF00,
-                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"), -- ISO 8601 timestamp
-                footer = { text = "Sent at 03:52 AM PST, June 15, 2025" }
-            }
+    do
+        local P = string.len
+        local V = table.insert
+        local g = math.floor
+        local r = type
+        local b = string.char
+        local z = C
+        local j = string.sub
+        local H = table.concat
+        local p = {
+            I = 28, ["+"] = 59, ["2"] = 46, ["1"] = 12, k = 51, O = 10,
+            -- ... (simplified mapping table, compute values from original)
+            a = 58
         }
-    }
-    local body = json.encode(payload)
-    local response, code = http.request({
-        url = webhook_url,
-        method = "POST",
-        headers = {
-            ["Content-Type"] = "application/json",
-            ["Content-Length"] = #body
-        },
-        source = ltn12.source.string(body)
-    })
-    return code == 204
-end
-
--- Main function mimicking original logic
-return function(...)
-    -- Decode strings (like original script)
-    local decoded = {}
-    for i = 1, #C do
-        decoded[i] = decode_string(C[i])
+        for C = 1, #z, 1 do
+            local I = z[C]
+            if r(I) == "string" then
+                local r = P(I)
+                local k = {}
+                local n = 1
+                local i = 0
+                local A = 0
+                while n <= r do
+                    local C = j(I, n, n)
+                    local P = p[C]
+                    if P then
+                        i = i + P * (64 ^ (4 - A))
+                        A = A + 1
+                        if A == 4 then
+                            A = 0
+                            local C = g(i / 65536)
+                            local P = g((i % 65536) / 256)
+                            local r = i % 256
+                            V(k, b(C, P, r))
+                            i = 0
+                        end
+                    elseif C == "1" then
+                        V(k, b(g(i / 65536)))
+                        if n >= r or j(I, n + 1, n + 1) ~= "1" then
+                            V(k, b(g((i % 65536) / 256)))
+                        end
+                        break
+                    end
+                    n = n + 1
+                end
+                z[C] = H(k)
+            end
+        end
     end
+    -- Placeholder for complex state machine
+    return (function(C, g, r, b, z, j, H, k, Y, a, A, Q, s, p, n, w, V, i, I, d)
+        -- Simplified logic (needs full deobfuscation)
+        return g(H)
+    end)(getfenv and getfenv() or _ENV, table.unpack, newproxy, setmetatable, getmetatable, select, {...})
+end)(...)
+]]
 
-    -- Process event (e.g., new question or action)
-    local args = {...}
-    local event = args[1] or "New event triggered at 03:52 AM PST, June 15, 2025"
-    local message = "Event: " .. event .. "\nDecoded data: " .. table.concat(decoded, ", ")
-
-    -- Send notification to Discord
-    if send_discord_notification(message) then
-        print("Notification sent to Discord!")
-    else
-        print("Failed to send notification.")
-    end
-
-    -- Return a function (like original script)
-    return function()
-        return "Processed: " .. event
-    end
-end
+-- Test locally (in a safe environment)
+-- loadstring(converted_code)()
